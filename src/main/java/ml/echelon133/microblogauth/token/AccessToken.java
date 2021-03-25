@@ -11,7 +11,7 @@ import java.util.UUID;
 @RedisHash(value="accessToken", timeToLive = 3600)
 public class AccessToken implements Serializable {
 
-    private final int ACCESS_TOKEN_LENGTH = 64;
+    private static final int ACCESS_TOKEN_LENGTH = 64;
 
     @Id
     private String token;

@@ -11,7 +11,7 @@ import java.util.UUID;
 @RedisHash(value="refreshToken", timeToLive = 2592000)
 public class RefreshToken implements Serializable {
 
-    private final int REFRESH_TOKEN_LENGTH = 80;
+    private static final int REFRESH_TOKEN_LENGTH = 80;
 
     @Id
     private String token;
