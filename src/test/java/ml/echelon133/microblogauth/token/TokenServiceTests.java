@@ -38,9 +38,9 @@ public class TokenServiceTests {
     @Test
     public void generateTokenPairForUser_CorrectFlowWhenRefreshTokenExists() {
         Optional<RefreshToken> refreshToken = Optional.of(
-                new RefreshToken(testUser.getUuid(), testUser.getUsername())
+                new RefreshToken(testUser.getUuid(), testUser.getUsername(), testUser.getAuthorities())
         );
-        AccessToken unwrappedAccessToken = new AccessToken(testUser.getUuid(), testUser.getUsername());
+        AccessToken unwrappedAccessToken = new AccessToken(testUser.getUuid(), testUser.getUsername(), testUser.getAuthorities());
 
         // given
         given(refreshTokenRepository.findByOwnerUsername(testUser.getUsername()))
@@ -57,8 +57,10 @@ public class TokenServiceTests {
 
     @Test
     public void generateTokenPairForUser_CorrectFlowWhenRefreshTokenDoesNotExist() {
-        RefreshToken unwrappedRefreshToken = new RefreshToken(testUser.getUuid(), testUser.getUsername());
-        AccessToken unwrappedAccessToken = new AccessToken(testUser.getUuid(), testUser.getUsername());
+        RefreshToken unwrappedRefreshToken = new RefreshToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+        AccessToken unwrappedAccessToken = new AccessToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
 
         Optional<RefreshToken> refreshToken = Optional.of(
             unwrappedRefreshToken
@@ -81,8 +83,10 @@ public class TokenServiceTests {
 
     @Test
     public void renewAccessToken_CorrectFlowWhenTokenExists() {
-        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(), testUser.getUsername());
-        AccessToken newAccessToken = new AccessToken(testUser.getUuid(), testUser.getUsername());
+        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+        AccessToken newAccessToken = new AccessToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
 
         // given
         given(refreshTokenRepository.findById(refreshToken.getToken()))
@@ -98,8 +102,8 @@ public class TokenServiceTests {
 
     @Test
     public void renewAccessToken_CorrectFlowWhenTokenDoesNotExist() {
-        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(), testUser.getUsername());
-        AccessToken newAccessToken = new AccessToken(testUser.getUuid(), testUser.getUsername());
+        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
 
         // given
         given(refreshTokenRepository.findById(refreshToken.getToken()))
