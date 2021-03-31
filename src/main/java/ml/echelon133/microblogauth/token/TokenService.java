@@ -32,7 +32,8 @@ public class TokenService implements ITokenService {
         if (refreshToken.isEmpty()) {
             RefreshToken newRefreshToken = new RefreshToken(
                     user.getUuid(),
-                    user.getUsername()
+                    user.getUsername(),
+                    user.getAuthorities()
             );
             refreshToken = Optional.of(refreshTokenRepository.save(newRefreshToken));
         }
@@ -41,7 +42,8 @@ public class TokenService implements ITokenService {
         // always generate a new access token when the user logs in
         AccessToken newAccessToken = new AccessToken(
                 user.getUuid(),
-                user.getUsername()
+                user.getUsername(),
+                user.getAuthorities()
         );
 
         accessToken = Optional.of(accessTokenRepository.save(newAccessToken));
@@ -59,7 +61,8 @@ public class TokenService implements ITokenService {
         if (refreshToken.isPresent()) {
             AccessToken newAccessToken = new AccessToken(
                     refreshToken.get().getOwnerUuid(),
-                    refreshToken.get().getOwnerUsername()
+                    refreshToken.get().getOwnerUsername(),
+                    refreshToken.get().getRoles()
             );
             return accessTokenRepository.save(newAccessToken);
         }
