@@ -1,7 +1,10 @@
 package ml.echelon133.microblogauth.token;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -11,16 +14,20 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-// access tokens should expire after 60 minutes
-@RedisHash(value="accessToken", timeToLive = 3600)
+@RedisHash(value="accessToken")
 public class AccessToken implements Serializable {
 
     private static final int ACCESS_TOKEN_LENGTH = 64;
+    // access tokens should expire after 60 minutes
+    public static final int ACCESS_TOKEN_TTL = 3600;
 
     @Id
     private String token;
     private UUID ownerUuid;
     private List<String> roles;
+
+    @TimeToLive
+    private long expiration;
 
     @Indexed
     private String ownerUsername;
@@ -31,17 +38,19 @@ public class AccessToken implements Serializable {
         this.ownerUsername = ownerUsername;
     }
 
-    public AccessToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
+    public AccessToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth, long expiration) {
         this(ownerUuid, ownerUsername);
         this.roles = auth
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
+        this.expiration = expiration;
     }
 
-    public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles) {
+    public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles, long expiration) {
         this(ownerUuid, ownerUsername);
         this.roles = roles;
+        this.expiration = expiration;
     }
 
     public String getToken() {
@@ -74,5 +83,13 @@ public class AccessToken implements Serializable {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public long getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
     }
 }
