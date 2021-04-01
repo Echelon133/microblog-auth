@@ -13,12 +13,18 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import javax.servlet.http.Cookie;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -45,7 +51,7 @@ public class TokenControllerTests {
 
     private JacksonTester<RefreshTokenDto> jsonRefreshTokenDto;
 
-    private JacksonTester<Map<String, String>> jsonAccessToken;
+    private JacksonTester<Map<String, String>> jsonMapResponse;
 
     @BeforeAll
     public static void beforeAll() {
@@ -67,7 +73,9 @@ public class TokenControllerTests {
 
     @Test
     public void generateTokens_GeneratesTokenPair() throws Exception {
-        TokenPair pair = new TokenPair("aaaa", "bbbb");
+        TokenPair pair = new TokenPair(
+                new RefreshToken(),
+                new AccessToken());
         JsonContent<TokenPair> jsonContent = jsonTokenPair.write(pair);
 
         // given
@@ -83,6 +91,46 @@ public class TokenControllerTests {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.getContentAsString()).isEqualTo(jsonContent.getJson());
+    }
+
+    @Test
+    public void generateTokens_SetsCookies() throws Exception {
+        UUID ownerUuid = UUID.randomUUID();
+        String ownerUsername = "test";
+
+        TokenPair pair = new TokenPair(
+                new RefreshToken(ownerUuid, ownerUsername, List.of((GrantedAuthority) () -> "ROLE_USER")),
+                new AccessToken(ownerUuid, ownerUsername, List.of((GrantedAuthority) () -> "ROLE_USER")));
+
+        Map<String, String> res = Map.of("accessToken", pair.getAccessToken().getToken(),
+                "refreshToken", pair.getRefreshToken().getToken());
+
+        JsonContent<Map<String, String>> jsonContent = jsonMapResponse.write(res);
+
+        // given
+        given(tokenService.generateTokenPairForUser(testUser)).willReturn(pair);
+        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
+        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(
+                post("/api/token")
+                        .accept(APPLICATION_JSON)
+                        .with(user(testUser))
+        ).andReturn().getResponse();
+
+        // then
+        Cookie rTokenCookie = response.getCookie("refreshToken");
+        Cookie aTokenCookie = response.getCookie("accessToken");
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(jsonContent.getJson());
+        assertEquals(pair.getRefreshToken().getToken(), rTokenCookie.getValue());
+        assertEquals(RefreshToken.REFRESH_TOKEN_TTL, rTokenCookie.getMaxAge());
+        assertEquals("/api/token/renew", rTokenCookie.getPath());
+
+        assertEquals(pair.getAccessToken().getToken(), aTokenCookie.getValue());
+        assertEquals(AccessToken.ACCESS_TOKEN_TTL, aTokenCookie.getMaxAge());
     }
 
     @Test
@@ -133,7 +181,7 @@ public class TokenControllerTests {
         RefreshTokenDto dto = new RefreshTokenDto("aaaa");
 
         JsonContent<RefreshTokenDto> refreshTokenContent = jsonRefreshTokenDto.write(dto);
-        JsonContent<Map<String, String>> accessTokenContent = jsonAccessToken
+        JsonContent<Map<String, String>> accessTokenContent = jsonMapResponse
                 .write(Map.of("accessToken", accessToken.getToken()));
 
         // given
