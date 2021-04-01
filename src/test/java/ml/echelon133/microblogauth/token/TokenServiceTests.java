@@ -51,8 +51,8 @@ public class TokenServiceTests {
         TokenPair pair = tokenService.generateTokenPairForUser(testUser);
 
         // then
-        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken());
-        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken());
+        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken().getToken());
+        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken().getToken());
     }
 
     @Test
@@ -77,8 +77,8 @@ public class TokenServiceTests {
         TokenPair pair = tokenService.generateTokenPairForUser(testUser);
 
         // then
-        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken());
-        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken());
+        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken().getToken());
+        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken().getToken());
     }
 
     @Test
