@@ -38,19 +38,19 @@ public class AccessToken implements Serializable {
         this.ownerUsername = ownerUsername;
     }
 
-    public AccessToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth, long expiration) {
+    public AccessToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
         this(ownerUuid, ownerUsername);
         this.roles = auth
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        this.expiration = expiration;
+        this.expiration = ACCESS_TOKEN_TTL;
     }
 
-    public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles, long expiration) {
+    public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles) {
         this(ownerUuid, ownerUsername);
         this.roles = roles;
-        this.expiration = expiration;
+        this.expiration = ACCESS_TOKEN_TTL;
     }
 
     public String getToken() {

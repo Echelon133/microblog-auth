@@ -32,7 +32,7 @@ public class RefreshToken implements Serializable {
     private String ownerUsername;
 
     public RefreshToken() {}
-    public RefreshToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth, long expiration) {
+    public RefreshToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
         this.token = TokenGenerator.generateToken(REFRESH_TOKEN_LENGTH);
         this.ownerUuid = ownerUuid;
         this.ownerUsername = ownerUsername;
@@ -40,7 +40,7 @@ public class RefreshToken implements Serializable {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        this.expiration = expiration;
+        this.expiration = REFRESH_TOKEN_TTL;
     }
 
     public String getToken() {
