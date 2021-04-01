@@ -1,7 +1,5 @@
 package ml.echelon133.microblogauth.token;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
@@ -17,7 +15,7 @@ import java.util.stream.Collectors;
 @RedisHash(value="accessToken")
 public class AccessToken implements Serializable {
 
-    private static final int ACCESS_TOKEN_LENGTH = 64;
+    public static final int ACCESS_TOKEN_LENGTH = 64;
     // access tokens should expire after 60 minutes
     public static final int ACCESS_TOKEN_TTL = 3600;
 
@@ -32,6 +30,7 @@ public class AccessToken implements Serializable {
     @Indexed
     private String ownerUsername;
 
+    public AccessToken() {}
     public AccessToken(UUID ownerUuid, String ownerUsername) {
         this.token = TokenGenerator.generateToken(ACCESS_TOKEN_LENGTH);
         this.ownerUuid = ownerUuid;
