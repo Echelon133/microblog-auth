@@ -1,6 +1,5 @@
 package ml.echelon133.microblogauth.token;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 @RedisHash(value="refreshToken")
 public class RefreshToken implements Serializable {
 
-    private static final int REFRESH_TOKEN_LENGTH = 80;
+    public static final int REFRESH_TOKEN_LENGTH = 80;
     // refresh tokens should expire after 30 days
     public static final int REFRESH_TOKEN_TTL = 2592000;
 
