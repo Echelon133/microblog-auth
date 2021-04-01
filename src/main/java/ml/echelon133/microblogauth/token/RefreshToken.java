@@ -1,33 +1,38 @@
 package ml.echelon133.microblogauth.token;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-// refresh tokens should expire after 30 days
-@RedisHash(value="refreshToken", timeToLive = 2592000)
+@RedisHash(value="refreshToken")
 public class RefreshToken implements Serializable {
 
     private static final int REFRESH_TOKEN_LENGTH = 80;
+    // refresh tokens should expire after 30 days
+    public static final int REFRESH_TOKEN_TTL = 2592000;
 
     @Id
     private String token;
     private UUID ownerUuid;
     private List<String> roles;
 
+    @TimeToLive
+    private long expiration;
+
     @Indexed
     private String ownerUsername;
 
     public RefreshToken() {}
-    public RefreshToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
+    public RefreshToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth, long expiration) {
         this.token = TokenGenerator.generateToken(REFRESH_TOKEN_LENGTH);
         this.ownerUuid = ownerUuid;
         this.ownerUsername = ownerUsername;
@@ -35,6 +40,7 @@ public class RefreshToken implements Serializable {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
+        this.expiration = expiration;
     }
 
     public String getToken() {
@@ -67,5 +73,13 @@ public class RefreshToken implements Serializable {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public long getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
     }
 }
