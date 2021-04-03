@@ -5,10 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @RestController
@@ -23,24 +22,40 @@ public class TokenController {
     }
 
     @PostMapping
-    public ResponseEntity<TokenPair> generateTokens() {
+    public ResponseEntity<Map<String, String>> generateTokens(HttpServletResponse response) {
         User loggedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         TokenPair pair = tokenService.generateTokenPairForUser(loggedUser);
 
-        return new ResponseEntity<>(pair, HttpStatus.OK);
+        response.addCookie(tokenService.buildRefreshTokenCookie(pair.getRefreshToken()));
+        response.addCookie(tokenService.buildAccessTokenCookie(pair.getAccessToken()));
+
+        return new ResponseEntity<>(Map.of(
+                "refreshToken", pair.getRefreshToken().getToken(),
+                "accessToken", pair.getAccessToken().getToken()
+        ), HttpStatus.OK);
     }
 
     @PostMapping("/renew")
     public ResponseEntity<Map<String, String>> renewAccessToken(
-            @Valid @RequestBody RefreshTokenDto refreshTokenDto,
-            BindingResult result) {
+            @CookieValue(name = "refreshToken", defaultValue = "") String cookieToken,
+            @RequestBody(required = false) RefreshTokenDto refreshTokenDto) {
 
-        if (result.hasErrors()) {
+        String refreshToken = "";
+
+        // take the refresh token either from the cookie or the body of the request
+        if (cookieToken.equals("") && refreshTokenDto.getRefreshToken() == null) {
             throw new IllegalArgumentException("Refresh token required");
+        } else {
+            // if both body and cookie are set, cookies take precedence
+            if (!cookieToken.equals("")) {
+                refreshToken = cookieToken;
+            } else {
+                refreshToken = refreshTokenDto.getRefreshToken();
+            }
         }
 
-        AccessToken accessToken = tokenService.renewAccessToken(refreshTokenDto.getRefreshToken());
+        AccessToken accessToken = tokenService.renewAccessToken(refreshToken);
         Map<String, String> response = Map.of("accessToken", accessToken.getToken());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
