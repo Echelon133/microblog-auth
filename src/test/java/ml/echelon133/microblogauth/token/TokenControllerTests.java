@@ -13,17 +13,14 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import javax.servlet.http.Cookie;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -71,15 +68,31 @@ public class TokenControllerTests {
                 .build();
     }
 
+    private AccessToken buildTestAccessToken() {
+        return new AccessToken(testUser.getUuid(), testUser.getUsername(), testUser.getAuthorities());
+    }
+
+    private RefreshToken buildTestRefreshToken() {
+        return new RefreshToken(testUser.getUuid(), testUser.getUsername(), testUser.getAuthorities());
+    }
+
     @Test
     public void generateTokens_GeneratesTokenPair() throws Exception {
         TokenPair pair = new TokenPair(
-                new RefreshToken(),
-                new AccessToken());
-        JsonContent<TokenPair> jsonContent = jsonTokenPair.write(pair);
+                buildTestRefreshToken(),
+                buildTestAccessToken()
+        );
+
+        Map<String, String> res = Map.of(
+                "accessToken", pair.getAccessToken().getToken(),
+                "refreshToken", pair.getRefreshToken().getToken()
+        );
+        JsonContent<Map<String, String>> jsonContent = jsonMapResponse.write(res);
 
         // given
         given(tokenService.generateTokenPairForUser(testUser)).willReturn(pair);
+        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -95,16 +108,15 @@ public class TokenControllerTests {
 
     @Test
     public void generateTokens_SetsCookies() throws Exception {
-        UUID ownerUuid = UUID.randomUUID();
-        String ownerUsername = "test";
-
         TokenPair pair = new TokenPair(
-                new RefreshToken(ownerUuid, ownerUsername, List.of((GrantedAuthority) () -> "ROLE_USER")),
-                new AccessToken(ownerUuid, ownerUsername, List.of((GrantedAuthority) () -> "ROLE_USER")));
+                buildTestRefreshToken(),
+                buildTestAccessToken()
+        );
 
-        Map<String, String> res = Map.of("accessToken", pair.getAccessToken().getToken(),
-                "refreshToken", pair.getRefreshToken().getToken());
-
+        Map<String, String> res = Map.of(
+                "accessToken", pair.getAccessToken().getToken(),
+                "refreshToken", pair.getRefreshToken().getToken()
+        );
         JsonContent<Map<String, String>> jsonContent = jsonMapResponse.write(res);
 
         // given
@@ -134,17 +146,14 @@ public class TokenControllerTests {
     }
 
     @Test
-    public void renewAccessToken_ThrowsWhenTokenNull() throws Exception {
-        RefreshTokenDto dto = new RefreshTokenDto(null);
-        JsonContent<RefreshTokenDto> jsonContent = jsonRefreshTokenDto.write(dto);
+    public void renewAccessToken_ThrowsWhenTokenNotProvided() throws Exception {
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
                 post("/api/token/renew")
                         .accept(APPLICATION_JSON)
-                        .with(user(testUser))
                         .contentType(APPLICATION_JSON)
-                        .content(jsonContent.getJson())
+                        .content("{}")
         ).andReturn().getResponse();
 
         // then
@@ -153,19 +162,72 @@ public class TokenControllerTests {
     }
 
     @Test
+    public void renewAccessToken_WorksWhenCorrectCookiePresent() throws Exception {
+        AccessToken accessToken = buildTestAccessToken();
+        JsonContent<Map<String, String>> accessTokenContent = jsonMapResponse
+                .write(Map.of("accessToken", accessToken.getToken()));
+
+        Cookie refreshToken = new Cookie("refreshToken", "aaaa");
+
+        // given
+        given(tokenService.renewAccessToken(refreshToken.getValue()))
+                .willReturn(accessToken);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(
+                post("/api/token/renew")
+                        .accept(APPLICATION_JSON)
+                        .cookie(refreshToken)
+                        .contentType(APPLICATION_JSON)
+                        .content("{}")
+        ).andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
+    }
+
+    @Test
+    public void renewAccessToken_TokenFromCookieIsPrioritized() throws Exception {
+        String bodyRefreshToken = "{\"refreshToken\":\"bbbb\"}";
+
+        AccessToken accessToken = buildTestAccessToken();
+        JsonContent<Map<String, String>> accessTokenContent = jsonMapResponse
+                .write(Map.of("accessToken", accessToken.getToken()));
+
+        Cookie refreshToken = new Cookie("refreshToken", "aaaa");
+
+        // given
+        given(tokenService.renewAccessToken(refreshToken.getValue()))
+                .willReturn(accessToken);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(
+                post("/api/token/renew")
+                        .accept(APPLICATION_JSON)
+                        .cookie(refreshToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(bodyRefreshToken)
+        ).andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
+    }
+
+    @Test
     public void renewAccessToken_ThrowsWhenTokenInvalid() throws Exception {
         RefreshTokenDto dto = new RefreshTokenDto("aaaa");
         JsonContent<RefreshTokenDto> jsonContent = jsonRefreshTokenDto.write(dto);
 
         // given
-        given(tokenService.renewAccessToken("aaaa"))
+        given(tokenService.renewAccessToken(dto.getRefreshToken()))
                 .willThrow(new IllegalArgumentException("Refresh token invalid"));
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
                 post("/api/token/renew")
                         .accept(APPLICATION_JSON)
-                        .with(user(testUser))
                         .contentType(APPLICATION_JSON)
                         .content(jsonContent.getJson())
         ).andReturn().getResponse();
@@ -176,8 +238,8 @@ public class TokenControllerTests {
     }
 
     @Test
-    public void renewAccessToken_ResponseCorrectWhenRenewingWorks() throws Exception {
-        AccessToken accessToken = new AccessToken(testUser.getUuid(), testUser.getUsername());
+    public void renewAccessToken_RefreshTokenTakenFromRequestBodyWhenCookieNotPresent() throws Exception {
+        AccessToken accessToken = buildTestAccessToken();
         RefreshTokenDto dto = new RefreshTokenDto("aaaa");
 
         JsonContent<RefreshTokenDto> refreshTokenContent = jsonRefreshTokenDto.write(dto);
@@ -185,13 +247,13 @@ public class TokenControllerTests {
                 .write(Map.of("accessToken", accessToken.getToken()));
 
         // given
-        given(tokenService.renewAccessToken("aaaa")).willReturn(accessToken);
+        given(tokenService.renewAccessToken(dto.getRefreshToken()))
+                .willReturn(accessToken);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
                 post("/api/token/renew")
                         .accept(APPLICATION_JSON)
-                        .with(user(testUser))
                         .contentType(APPLICATION_JSON)
                         .content(refreshTokenContent.getJson())
         ).andReturn().getResponse();
@@ -200,6 +262,4 @@ public class TokenControllerTests {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
     }
-
-
 }
