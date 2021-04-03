@@ -1,19 +1,19 @@
 package ml.echelon133.microblogauth.token;
 
 public class TokenPair {
-    private final String refreshToken;
-    private final String accessToken;
+    private final RefreshToken refreshToken;
+    private final AccessToken accessToken;
 
-    public TokenPair(String refreshToken, String accessToken) {
+    public TokenPair(RefreshToken refreshToken, AccessToken accessToken) {
         this.refreshToken = refreshToken;
         this.accessToken = accessToken;
     }
 
-    public String getRefreshToken() {
+    public RefreshToken getRefreshToken() {
         return refreshToken;
     }
 
-    public String getAccessToken() {
+    public AccessToken getAccessToken() {
         return accessToken;
     }
 }

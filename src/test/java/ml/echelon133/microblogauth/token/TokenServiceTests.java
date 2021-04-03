@@ -1,6 +1,5 @@
 package ml.echelon133.microblogauth.token;
 
-import ml.echelon133.microblogauth.token.*;
 import ml.echelon133.microblogauth.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -9,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.servlet.http.Cookie;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,13 +46,15 @@ public class TokenServiceTests {
         given(refreshTokenRepository.findByOwnerUsername(testUser.getUsername()))
                 .willReturn(refreshToken);
         given(accessTokenRepository.save(any())).willReturn(unwrappedAccessToken);
+        given(refreshTokenRepository.findById(refreshToken.get().getToken()))
+                .willReturn(refreshToken);
 
         // when
         TokenPair pair = tokenService.generateTokenPairForUser(testUser);
 
         // then
-        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken());
-        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken());
+        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken().getToken());
+        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken().getToken());
     }
 
     @Test
@@ -77,8 +79,8 @@ public class TokenServiceTests {
         TokenPair pair = tokenService.generateTokenPairForUser(testUser);
 
         // then
-        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken());
-        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken());
+        assertEquals(refreshToken.get().getToken(), pair.getRefreshToken().getToken());
+        assertEquals(unwrappedAccessToken.getToken(), pair.getAccessToken().getToken());
     }
 
     @Test
@@ -116,5 +118,69 @@ public class TokenServiceTests {
 
         // then
         assertEquals("Refresh token invalid", msg);
+    }
+
+    @Test
+    public void buildRefreshTokenCookie_SetsCorrectMaxAgeAndPathForNewToken() {
+        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+
+        // when
+        Cookie refreshTokenCookie = tokenService.buildRefreshTokenCookie(refreshToken);
+
+        // then
+        assertEquals("refreshToken", refreshTokenCookie.getName());
+        assertEquals(RefreshToken.REFRESH_TOKEN_LENGTH, refreshTokenCookie.getValue().length());
+        assertEquals(RefreshToken.REFRESH_TOKEN_TTL, refreshTokenCookie.getMaxAge());
+        assertEquals("/api/token/renew", refreshTokenCookie.getPath());
+    }
+
+    @Test
+    public void buildRefreshTokenCookie_SetsCorrectMaxAgeAndPathForOlderToken() {
+        long ttl = 1000;
+
+        RefreshToken refreshToken = new RefreshToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+        refreshToken.setExpiration(ttl);
+
+        // when
+        Cookie refreshTokenCookie = tokenService.buildRefreshTokenCookie(refreshToken);
+
+        // then
+        assertEquals("refreshToken", refreshTokenCookie.getName());
+        assertEquals(RefreshToken.REFRESH_TOKEN_LENGTH, refreshTokenCookie.getValue().length());
+        assertEquals(ttl, refreshTokenCookie.getMaxAge());
+        assertEquals("/api/token/renew", refreshTokenCookie.getPath());
+    }
+
+    @Test
+    public void buildAccessTokenCookie_SetsCorrectMaxAgeForNewToken() {
+        AccessToken accessToken = new AccessToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+
+        // when
+        Cookie accessTokenCookie = tokenService.buildAccessTokenCookie(accessToken);
+
+        // then
+        assertEquals("accessToken", accessTokenCookie.getName());
+        assertEquals(AccessToken.ACCESS_TOKEN_LENGTH, accessTokenCookie.getValue().length());
+        assertEquals(AccessToken.ACCESS_TOKEN_TTL, accessTokenCookie.getMaxAge());
+    }
+
+    @Test
+    public void buildAccessTokenCookie_SetsCorrectMaxAgeForOlderToken() {
+        long ttl = 1000;
+
+        AccessToken accessToken = new AccessToken(testUser.getUuid(),
+                testUser.getUsername(), testUser.getAuthorities());
+        accessToken.setExpiration(ttl);
+
+        // when
+        Cookie accessTokenCookie = tokenService.buildAccessTokenCookie(accessToken);
+
+        // then
+        assertEquals("accessToken", accessTokenCookie.getName());
+        assertEquals(AccessToken.ACCESS_TOKEN_LENGTH, accessTokenCookie.getValue().length());
+        assertEquals(ttl, accessTokenCookie.getMaxAge());
     }
 }
