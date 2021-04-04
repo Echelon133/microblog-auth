@@ -168,7 +168,7 @@ public class TokenServiceTests {
     }
 
     @Test
-    public void buildAccessTokenCookie_SetsCorrectMaxAgeForOlderToken() {
+    public void buildAccessTokenCookie_SetsCorrectMaxAgeAndPathForOlderToken() {
         long ttl = 1000;
 
         AccessToken accessToken = new AccessToken(testUser.getUuid(),
@@ -182,5 +182,6 @@ public class TokenServiceTests {
         assertEquals("accessToken", accessTokenCookie.getName());
         assertEquals(AccessToken.ACCESS_TOKEN_LENGTH, accessTokenCookie.getValue().length());
         assertEquals(ttl, accessTokenCookie.getMaxAge());
+        assertEquals("/api", accessTokenCookie.getPath());
     }
 }
