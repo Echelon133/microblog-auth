@@ -172,6 +172,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(refreshToken.getValue()))
                 .willReturn(accessToken);
+        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -200,6 +201,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(refreshToken.getValue()))
                 .willReturn(accessToken);
+        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -249,6 +251,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(dto.getRefreshToken()))
                 .willReturn(accessToken);
+        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -261,5 +264,36 @@ public class TokenControllerTests {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
+    }
+
+    @Test
+    public void renewAccessToken_SetsAccessTokenCookie() throws Exception {
+        AccessToken accessToken = buildTestAccessToken();
+        JsonContent<Map<String, String>> accessTokenContent = jsonMapResponse
+                .write(Map.of("accessToken", accessToken.getToken()));
+
+        Cookie refreshToken = new Cookie("refreshToken", "aaaa");
+
+        // given
+        given(tokenService.renewAccessToken(refreshToken.getValue()))
+                .willReturn(accessToken);
+        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(
+                post("/api/token/renew")
+                        .accept(APPLICATION_JSON)
+                        .cookie(refreshToken)
+                        .contentType(APPLICATION_JSON)
+        ).andReturn().getResponse();
+
+        // then
+        Cookie aTokenCookie = response.getCookie("accessToken");
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
+        assertEquals(accessToken.getToken(), aTokenCookie.getValue());
+        assertEquals(AccessToken.ACCESS_TOKEN_TTL, aTokenCookie.getMaxAge());
+        assertEquals("/api", aTokenCookie.getPath());
     }
 }

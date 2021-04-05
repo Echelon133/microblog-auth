@@ -89,6 +89,7 @@ public class TokenService implements ITokenService {
         Cookie accessTokenCookie = new Cookie("accessToken",
                 accessToken.getToken());
         accessTokenCookie.setMaxAge((int) accessToken.getExpiration());
+        accessTokenCookie.setPath("/api");
         return accessTokenCookie;
     }
 }

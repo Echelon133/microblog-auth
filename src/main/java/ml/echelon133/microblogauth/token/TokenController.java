@@ -38,6 +38,7 @@ public class TokenController {
 
     @PostMapping("/renew")
     public ResponseEntity<Map<String, String>> renewAccessToken(
+            HttpServletResponse response,
             @CookieValue(name = "refreshToken", defaultValue = "") String cookieToken,
             @RequestBody(required = false) RefreshTokenDto refreshTokenDto) {
 
@@ -56,7 +57,7 @@ public class TokenController {
         }
 
         AccessToken accessToken = tokenService.renewAccessToken(refreshToken);
-        Map<String, String> response = Map.of("accessToken", accessToken.getToken());
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        response.addCookie(tokenService.buildAccessTokenCookie(accessToken));
+        return new ResponseEntity<>(Map.of("accessToken", accessToken.getToken()), HttpStatus.OK);
     }
 }
