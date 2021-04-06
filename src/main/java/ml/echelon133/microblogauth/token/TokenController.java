@@ -60,4 +60,18 @@ public class TokenController {
         response.addCookie(tokenService.buildAccessTokenCookie(accessToken));
         return new ResponseEntity<>(Map.of("accessToken", accessToken.getToken()), HttpStatus.OK);
     }
+
+    @PostMapping("/clearTokens")
+    public ResponseEntity<Map<String, String>> clearTokens(HttpServletResponse response) {
+        AccessToken emptyAccessToken = new AccessToken();
+        RefreshToken emptyRefreshToken = new RefreshToken();
+
+        // make both tokens expire immediately
+        emptyAccessToken.setExpiration(0);
+        emptyRefreshToken.setExpiration(0);
+
+        response.addCookie(tokenService.buildAccessTokenCookie(emptyAccessToken));
+        response.addCookie(tokenService.buildRefreshTokenCookie(emptyRefreshToken));
+        return new ResponseEntity<>(Map.of(), HttpStatus.OK);
+    }
 }

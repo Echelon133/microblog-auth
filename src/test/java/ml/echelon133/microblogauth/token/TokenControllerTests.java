@@ -143,6 +143,7 @@ public class TokenControllerTests {
 
         assertEquals(pair.getAccessToken().getToken(), aTokenCookie.getValue());
         assertEquals(AccessToken.ACCESS_TOKEN_TTL, aTokenCookie.getMaxAge());
+        assertEquals("/api", aTokenCookie.getPath());
     }
 
     @Test
@@ -294,6 +295,34 @@ public class TokenControllerTests {
         assertThat(response.getContentAsString()).isEqualTo(accessTokenContent.getJson());
         assertEquals(accessToken.getToken(), aTokenCookie.getValue());
         assertEquals(AccessToken.ACCESS_TOKEN_TTL, aTokenCookie.getMaxAge());
+        assertEquals("/api", aTokenCookie.getPath());
+    }
+
+    @Test
+    public void clearTokens_ReturnsCorrectEmptyTokens() throws Exception {
+
+        // given
+        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
+        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(
+                post("/api/token/clearTokens")
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+        ).andReturn().getResponse();
+
+        // then
+        Cookie rTokenCookie = response.getCookie("refreshToken");
+        Cookie aTokenCookie = response.getCookie("accessToken");
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertEquals(null, rTokenCookie.getValue());
+        assertEquals(0, rTokenCookie.getMaxAge());
+        assertEquals("/api/token/renew", rTokenCookie.getPath());
+
+        assertEquals(null, aTokenCookie.getValue());
+        assertEquals(0, aTokenCookie.getMaxAge());
         assertEquals("/api", aTokenCookie.getPath());
     }
 }
