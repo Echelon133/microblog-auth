@@ -2,6 +2,7 @@ package ml.echelon133.microblogauth.token;
 
 import ml.echelon133.microblogauth.token.repository.AccessTokenRepository;
 import ml.echelon133.microblogauth.token.repository.RefreshTokenRepository;
+import ml.echelon133.microblogauth.token.service.TokenService;
 import ml.echelon133.microblogauth.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

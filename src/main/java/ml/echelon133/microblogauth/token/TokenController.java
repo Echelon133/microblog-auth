@@ -1,5 +1,6 @@
 package ml.echelon133.microblogauth.token;
 
+import ml.echelon133.microblogauth.token.service.ITokenService;
 import ml.echelon133.microblogauth.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
