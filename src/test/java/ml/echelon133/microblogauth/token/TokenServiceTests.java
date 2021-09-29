@@ -1,5 +1,8 @@
 package ml.echelon133.microblogauth.token;
 
+import ml.echelon133.microblogauth.token.model.AccessToken;
+import ml.echelon133.microblogauth.token.model.RefreshToken;
+import ml.echelon133.microblogauth.token.model.TokenPair;
 import ml.echelon133.microblogauth.token.repository.AccessTokenRepository;
 import ml.echelon133.microblogauth.token.repository.RefreshTokenRepository;
 import ml.echelon133.microblogauth.token.service.TokenService;

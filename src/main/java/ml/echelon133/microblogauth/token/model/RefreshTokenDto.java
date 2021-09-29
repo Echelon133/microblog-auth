@@ -1,4 +1,4 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.model;
 
 import javax.validation.constraints.NotNull;
 
