@@ -1,6 +1,6 @@
 package ml.echelon133.microblogauth.token.model;
 
-import ml.echelon133.microblogauth.token.TokenGenerator;
+import ml.echelon133.microblogauth.token.generator.TokenGenerator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;

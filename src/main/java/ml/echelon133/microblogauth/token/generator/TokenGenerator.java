@@ -1,4 +1,4 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.generator;
 
 import java.security.SecureRandom;
 
