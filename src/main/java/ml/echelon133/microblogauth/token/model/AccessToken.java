@@ -26,7 +26,7 @@ public class AccessToken implements Serializable {
     private List<String> roles;
 
     @TimeToLive
-    private long expiration;
+    private long expiration = ACCESS_TOKEN_TTL;
 
     @Indexed
     private String ownerUsername;
@@ -44,13 +44,11 @@ public class AccessToken implements Serializable {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        this.expiration = ACCESS_TOKEN_TTL;
     }
 
     public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles) {
         this(ownerUuid, ownerUsername);
         this.roles = roles;
-        this.expiration = ACCESS_TOKEN_TTL;
     }
 
     public String getToken() {

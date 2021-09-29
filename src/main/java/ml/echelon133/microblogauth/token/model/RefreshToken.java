@@ -26,7 +26,7 @@ public class RefreshToken implements Serializable {
     private List<String> roles;
 
     @TimeToLive
-    private long expiration;
+    private long expiration = REFRESH_TOKEN_TTL;
 
     @Indexed
     private String ownerUsername;
@@ -40,7 +40,6 @@ public class RefreshToken implements Serializable {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        this.expiration = REFRESH_TOKEN_TTL;
     }
 
     public String getToken() {
