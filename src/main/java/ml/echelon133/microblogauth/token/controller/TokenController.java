@@ -1,5 +1,10 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.controller;
 
+import ml.echelon133.microblogauth.token.model.AccessToken;
+import ml.echelon133.microblogauth.token.model.RefreshToken;
+import ml.echelon133.microblogauth.token.model.RefreshTokenDto;
+import ml.echelon133.microblogauth.token.model.TokenPair;
+import ml.echelon133.microblogauth.token.service.ITokenService;
 import ml.echelon133.microblogauth.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,8 +32,8 @@ public class TokenController {
 
         TokenPair pair = tokenService.generateTokenPairForUser(loggedUser);
 
-        response.addCookie(tokenService.buildRefreshTokenCookie(pair.getRefreshToken()));
-        response.addCookie(tokenService.buildAccessTokenCookie(pair.getAccessToken()));
+        response.addCookie(ITokenService.buildRefreshTokenCookie(pair.getRefreshToken()));
+        response.addCookie(ITokenService.buildAccessTokenCookie(pair.getAccessToken()));
 
         return new ResponseEntity<>(Map.of(
                 "refreshToken", pair.getRefreshToken().getToken(),
@@ -57,7 +62,7 @@ public class TokenController {
         }
 
         AccessToken accessToken = tokenService.renewAccessToken(refreshToken);
-        response.addCookie(tokenService.buildAccessTokenCookie(accessToken));
+        response.addCookie(ITokenService.buildAccessTokenCookie(accessToken));
         return new ResponseEntity<>(Map.of("accessToken", accessToken.getToken()), HttpStatus.OK);
     }
 
@@ -70,8 +75,8 @@ public class TokenController {
         emptyAccessToken.setExpiration(0);
         emptyRefreshToken.setExpiration(0);
 
-        response.addCookie(tokenService.buildAccessTokenCookie(emptyAccessToken));
-        response.addCookie(tokenService.buildRefreshTokenCookie(emptyRefreshToken));
+        response.addCookie(ITokenService.buildAccessTokenCookie(emptyAccessToken));
+        response.addCookie(ITokenService.buildRefreshTokenCookie(emptyRefreshToken));
         return new ResponseEntity<>(Map.of(), HttpStatus.OK);
     }
 }

@@ -1,5 +1,10 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.service;
 
+import ml.echelon133.microblogauth.token.model.AccessToken;
+import ml.echelon133.microblogauth.token.model.RefreshToken;
+import ml.echelon133.microblogauth.token.model.TokenPair;
+import ml.echelon133.microblogauth.token.repository.AccessTokenRepository;
+import ml.echelon133.microblogauth.token.repository.RefreshTokenRepository;
 import ml.echelon133.microblogauth.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -126,7 +131,7 @@ public class TokenServiceTests {
                 testUser.getUsername(), testUser.getAuthorities());
 
         // when
-        Cookie refreshTokenCookie = tokenService.buildRefreshTokenCookie(refreshToken);
+        Cookie refreshTokenCookie = ITokenService.buildRefreshTokenCookie(refreshToken);
 
         // then
         assertEquals("refreshToken", refreshTokenCookie.getName());
@@ -144,7 +149,7 @@ public class TokenServiceTests {
         refreshToken.setExpiration(ttl);
 
         // when
-        Cookie refreshTokenCookie = tokenService.buildRefreshTokenCookie(refreshToken);
+        Cookie refreshTokenCookie = ITokenService.buildRefreshTokenCookie(refreshToken);
 
         // then
         assertEquals("refreshToken", refreshTokenCookie.getName());
@@ -159,7 +164,7 @@ public class TokenServiceTests {
                 testUser.getUsername(), testUser.getAuthorities());
 
         // when
-        Cookie accessTokenCookie = tokenService.buildAccessTokenCookie(accessToken);
+        Cookie accessTokenCookie = ITokenService.buildAccessTokenCookie(accessToken);
 
         // then
         assertEquals("accessToken", accessTokenCookie.getName());
@@ -176,7 +181,7 @@ public class TokenServiceTests {
         accessToken.setExpiration(ttl);
 
         // when
-        Cookie accessTokenCookie = tokenService.buildAccessTokenCookie(accessToken);
+        Cookie accessTokenCookie = ITokenService.buildAccessTokenCookie(accessToken);
 
         // then
         assertEquals("accessToken", accessTokenCookie.getName());

@@ -1,5 +1,6 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.model;
 
+import ml.echelon133.microblogauth.token.generator.TokenGenerator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
@@ -12,12 +13,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@RedisHash(value="accessToken")
-public class AccessToken implements Serializable {
+@RedisHash(value="refreshToken")
+public class RefreshToken implements Serializable {
 
-    public static final int ACCESS_TOKEN_LENGTH = 64;
-    // access tokens should expire after 60 minutes
-    public static final int ACCESS_TOKEN_TTL = 3600;
+    public static final int REFRESH_TOKEN_LENGTH = 80;
+    // refresh tokens should expire after 30 days
+    public static final int REFRESH_TOKEN_TTL = 2592000;
 
     @Id
     private String token;
@@ -25,31 +26,20 @@ public class AccessToken implements Serializable {
     private List<String> roles;
 
     @TimeToLive
-    private long expiration;
+    private long expiration = REFRESH_TOKEN_TTL;
 
     @Indexed
     private String ownerUsername;
 
-    public AccessToken() {}
-    public AccessToken(UUID ownerUuid, String ownerUsername) {
-        this.token = TokenGenerator.generateToken(ACCESS_TOKEN_LENGTH);
+    public RefreshToken() {}
+    public RefreshToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
+        this.token = TokenGenerator.generateToken(REFRESH_TOKEN_LENGTH);
         this.ownerUuid = ownerUuid;
         this.ownerUsername = ownerUsername;
-    }
-
-    public AccessToken(UUID ownerUuid, String ownerUsername, Collection<? extends GrantedAuthority> auth) {
-        this(ownerUuid, ownerUsername);
         this.roles = auth
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        this.expiration = ACCESS_TOKEN_TTL;
-    }
-
-    public AccessToken(UUID ownerUuid, String ownerUsername, List<String> roles) {
-        this(ownerUuid, ownerUsername);
-        this.roles = roles;
-        this.expiration = ACCESS_TOKEN_TTL;
     }
 
     public String getToken() {

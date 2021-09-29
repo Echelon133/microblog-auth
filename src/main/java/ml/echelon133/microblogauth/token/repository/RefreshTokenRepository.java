@@ -1,5 +1,6 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.repository;
 
+import ml.echelon133.microblogauth.token.model.RefreshToken;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

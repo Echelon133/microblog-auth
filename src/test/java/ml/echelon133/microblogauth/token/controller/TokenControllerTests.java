@@ -1,6 +1,14 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ml.echelon133.microblogauth.token.controller.TokenController;
+import ml.echelon133.microblogauth.token.exception.TokenExceptionHandler;
+import ml.echelon133.microblogauth.token.model.AccessToken;
+import ml.echelon133.microblogauth.token.model.RefreshToken;
+import ml.echelon133.microblogauth.token.model.RefreshTokenDto;
+import ml.echelon133.microblogauth.token.model.TokenPair;
+import ml.echelon133.microblogauth.token.service.ITokenService;
+import ml.echelon133.microblogauth.token.service.TokenService;
 import ml.echelon133.microblogauth.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,8 +99,8 @@ public class TokenControllerTests {
 
         // given
         given(tokenService.generateTokenPairForUser(testUser)).willReturn(pair);
-        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
-        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(any())).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -121,8 +129,8 @@ public class TokenControllerTests {
 
         // given
         given(tokenService.generateTokenPairForUser(testUser)).willReturn(pair);
-        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
-        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -173,7 +181,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(refreshToken.getValue()))
                 .willReturn(accessToken);
-        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -202,7 +210,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(refreshToken.getValue()))
                 .willReturn(accessToken);
-        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -252,7 +260,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(dto.getRefreshToken()))
                 .willReturn(accessToken);
-        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -278,7 +286,7 @@ public class TokenControllerTests {
         // given
         given(tokenService.renewAccessToken(refreshToken.getValue()))
                 .willReturn(accessToken);
-        given(tokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(accessToken)).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
@@ -302,8 +310,8 @@ public class TokenControllerTests {
     public void clearTokens_ReturnsCorrectEmptyTokens() throws Exception {
 
         // given
-        given(tokenService.buildAccessTokenCookie(any())).willCallRealMethod();
-        given(tokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildAccessTokenCookie(any())).willCallRealMethod();
+        given(ITokenService.buildRefreshTokenCookie(any())).willCallRealMethod();
 
         // when
         MockHttpServletResponse response = mockMvc.perform(

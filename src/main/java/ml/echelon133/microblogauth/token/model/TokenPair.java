@@ -1,4 +1,7 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.model;
+
+import ml.echelon133.microblogauth.token.model.AccessToken;
+import ml.echelon133.microblogauth.token.model.RefreshToken;
 
 public class TokenPair {
     private final RefreshToken refreshToken;
