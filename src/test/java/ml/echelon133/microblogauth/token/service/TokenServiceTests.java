@@ -1,4 +1,4 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.service;
 
 import ml.echelon133.microblogauth.token.model.AccessToken;
 import ml.echelon133.microblogauth.token.model.RefreshToken;

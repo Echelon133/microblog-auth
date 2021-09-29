@@ -1,6 +1,7 @@
-package ml.echelon133.microblogauth.token;
+package ml.echelon133.microblogauth.token.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ml.echelon133.microblogauth.token.controller.TokenController;
 import ml.echelon133.microblogauth.token.exception.TokenExceptionHandler;
 import ml.echelon133.microblogauth.token.model.AccessToken;
 import ml.echelon133.microblogauth.token.model.RefreshToken;
