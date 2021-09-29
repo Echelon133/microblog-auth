@@ -32,7 +32,7 @@ public class AccessToken implements Serializable {
     private String ownerUsername;
 
     public AccessToken() {}
-    public AccessToken(UUID ownerUuid, String ownerUsername) {
+    private AccessToken(UUID ownerUuid, String ownerUsername) {
         this.token = TokenGenerator.generateToken(ACCESS_TOKEN_LENGTH);
         this.ownerUuid = ownerUuid;
         this.ownerUsername = ownerUsername;
