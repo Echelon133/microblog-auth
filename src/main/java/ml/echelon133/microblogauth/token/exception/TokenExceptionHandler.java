@@ -1,6 +1,6 @@
 package ml.echelon133.microblogauth.token.exception;
 
-import ml.echelon133.microblogauth.token.TokenController;
+import ml.echelon133.microblogauth.token.controller.TokenController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
